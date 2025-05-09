@@ -1,0 +1,78 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #fdfdfd;
+}
+
+h1 {
+  color: #222;
+  margin-bottom: 20px;
+}
+
+h2 {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5em;
+}
+
+input, button {
+  padding: 6px 10px;
+  margin: 5px 5px 10px 0;
+  font-size: 14px;
+}
+
+button {
+  background-color: #007bff;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+.task {
+  margin-bottom: 10px;
+}
+
+.task span {
+  font-weight: bold;
+}
+
+.task-buttons {
+  margin-top: 5px;
+}
+
+.task-buttons button {
+  margin-right: 5px;
+}
+
+p button {
+  background: none;
+  color: #007bff;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+p button:hover {
+  text-decoration: underline;
+}
