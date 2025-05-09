@@ -1,27 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [pouzivatel, setPouzivatel] = useState(localStorage.getItem("meno") || "");
   const [meno, setMeno] = useState("");
   const [heslo, setHeslo] = useState("");
   const [jeRegistracia, setJeRegistracia] = useState(false);
-
   const [ulohy, setUlohy] = useState([]);
   const [nazov, setNazov] = useState("");
   const [popis, setPopis] = useState("");
 
   useEffect(() => {
-    if (token) {
-      nacitajUlohy();
-    }
+    if (token) nacitajUlohy();
   }, [token]);
 
   const nacitajUlohy = async () => {
     try {
-      const odpoved = await fetch("http://127.0.0.1:5000/tasks", {
-        headers: { Authorization: `Bearer ${token}` }
+      const odpoved = await fetch(`${API_URL}/tasks`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await odpoved.json();
       setUlohy(data);
@@ -33,31 +32,32 @@ function App() {
   const pridajUlohu = async () => {
     if (!nazov || !popis) return alert("Zadaj názov aj popis.");
     try {
-      await fetch("http://127.0.0.1:5000/tasks", {
+      const odpoved = await fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ nazov, popis })
+        body: JSON.stringify({ nazov, popis }),
       });
+      if (!odpoved.ok) throw new Error("Chyba pri vytváraní úlohy");
       setNazov("");
       setPopis("");
       nacitajUlohy();
     } catch (err) {
-      console.error("Chyba pri pridávaní úlohy:", err);
+      console.error(err);
     }
   };
 
   const zmenStav = async (id, novyStav) => {
     try {
-      await fetch(`http://127.0.0.1:5000/tasks/${id}`, {
+      await fetch(`${API_URL}/tasks/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ stav: novyStav })
+        body: JSON.stringify({ stav: novyStav }),
       });
       nacitajUlohy();
     } catch (err) {
@@ -68,9 +68,9 @@ function App() {
   const odstranUlohu = async (id) => {
     if (!window.confirm("Naozaj chceš úlohu vymazať?")) return;
     try {
-      await fetch(`http://127.0.0.1:5000/tasks/${id}`, {
+      await fetch(`${API_URL}/tasks/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       nacitajUlohy();
     } catch (err) {
@@ -81,10 +81,10 @@ function App() {
   const prihlasPouzivatela = async () => {
     if (!meno || !heslo) return alert("Zadaj meno aj heslo.");
     try {
-      const odpoved = await fetch("http://127.0.0.1:5000/login", {
+      const odpoved = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meno, heslo })
+        body: JSON.stringify({ meno, heslo }),
       });
       const data = await odpoved.json();
       if (data.token) {
@@ -103,10 +103,10 @@ function App() {
   const registrujPouzivatela = async () => {
     if (!meno || !heslo) return alert("Zadaj meno aj heslo.");
     try {
-      const odpoved = await fetch("http://127.0.0.1:5000/register", {
+      const odpoved = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meno, heslo })
+        body: JSON.stringify({ meno, heslo }),
       });
       const data = await odpoved.json();
       if (odpoved.status === 201) {
@@ -130,59 +130,46 @@ function App() {
     setUlohy([]);
   };
 
-  const renderUlohy = (stav) => (
-    ulohy.filter(u => u.stav === stav).map(u => (
-      <li key={u.id}>
-        <strong>{u.nazov}</strong>: {u.popis} | Stav: {u.stav}
-        {stav === "Nezahájená" && (
-          <>
-            <button onClick={() => zmenStav(u.id, "Prebieha")}>Prebieha</button>
-            <button onClick={() => odstranUlohu(u.id)}>Odstrániť</button>
-          </>
-        )}
-        {stav === "Prebieha" && (
-          <>
-            <button onClick={() => zmenStav(u.id, "Hotová")}>Hotová</button>
-            <button onClick={() => odstranUlohu(u.id)}>Odstrániť</button>
-          </>
-        )}
-        {stav === "Hotová" && (
-          <button onClick={() => odstranUlohu(u.id)}>Odstrániť</button>
-        )}
-      </li>
-    ))
-  );
+  const renderUlohy = (stav) =>
+    ulohy
+      .filter((u) => u.stav === stav)
+      .map((u) => (
+        <li key={u.id}>
+          <strong>{u.nazov}</strong>: {u.popis} | Stav: {u.stav}
+          {stav === "Nezahájená" && (
+            <>
+              <button onClick={() => zmenStav(u.id, "Prebieha")}>Prebieha</button>
+              <button onClick={() => odstranUlohu(u.id)}>Odstrániť</button>
+            </>
+          )}
+          {stav === "Prebieha" && (
+            <>
+              <button onClick={() => zmenStav(u.id, "Hotová")}>Hotová</button>
+              <button onClick={() => odstranUlohu(u.id)}>Odstrániť</button>
+            </>
+          )}
+          {stav === "Hotová" && <button onClick={() => odstranUlohu(u.id)}>Odstrániť</button>}
+        </li>
+      ));
 
   if (!token) {
     return (
       <div style={{ padding: "20px" }}>
         <h2>{jeRegistracia ? "Registrácia" : "Prihlásenie"}</h2>
-        <input
-          type="text"
-          placeholder="Zadaj meno"
-          value={meno}
-          onChange={(e) => setMeno(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Zadaj heslo"
-          value={heslo}
-          onChange={(e) => setHeslo(e.target.value)}
-        />
+        <input type="text" placeholder="Zadaj meno" value={meno} onChange={(e) => setMeno(e.target.value)} />
+        <input type="password" placeholder="Zadaj heslo" value={heslo} onChange={(e) => setHeslo(e.target.value)} />
         {jeRegistracia ? (
           <>
             <button onClick={registrujPouzivatela}>Registrovať</button>
             <p>
-              Už máš účet?{" "}
-              <button onClick={() => setJeRegistracia(false)}>Prihlásiť sa</button>
+              Už máš účet? <button onClick={() => setJeRegistracia(false)}>Prihlásiť sa</button>
             </p>
           </>
         ) : (
           <>
             <button onClick={prihlasPouzivatela}>Prihlásiť</button>
             <p>
-              Nemáš účet?{" "}
-              <button onClick={() => setJeRegistracia(true)}>Registrovať sa</button>
+              Nemáš účet? <button onClick={() => setJeRegistracia(true)}>Registrovať sa</button>
             </p>
           </>
         )}
@@ -199,19 +186,8 @@ function App() {
           <button onClick={odhlas}>Odhlásiť</button>
         </div>
       </div>
-
-      <input
-        type="text"
-        placeholder="Zadaj názov"
-        value={nazov}
-        onChange={(e) => setNazov(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Zadaj popis"
-        value={popis}
-        onChange={(e) => setPopis(e.target.value)}
-      />
+      <input type="text" placeholder="Zadaj názov" value={nazov} onChange={(e) => setNazov(e.target.value)} />
+      <input type="text" placeholder="Zadaj popis" value={popis} onChange={(e) => setPopis(e.target.value)} />
       <button onClick={pridajUlohu}>Pridať</button>
 
       <h2>🕒 Nezahájené úlohy</h2>

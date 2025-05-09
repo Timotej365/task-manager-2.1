@@ -1,41 +1,58 @@
-# === API.py ===
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
-from werkzeug.security import check_password_hash
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
 
+# Povolenie CORS pre frontend
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+
+# Pridanie hlavičiek po každom requeste
+@app.after_request
+def pridaj_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+    return response
+
+# Načítanie tajného kľúča
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
-# Funkcia na pripojenie k databáze
+# Pripojenie k Aiven DB cez SSL
 def pripojenie_db():
     try:
         spojenie = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="1111",
-            database="task_manager_auth"  # tu je zmena!
+            host=os.getenv("DB_HOST"),
+            port=int(os.getenv("DB_PORT")),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            ssl_ca=os.path.join(os.path.dirname(__file__), "ca.pem"),
+            ssl_verify_cert=True
         )
+        print("✅ Pripojenie k databáze úspešné.")
         return spojenie
     except Error as e:
-        print("Chyba pri pripájaní k databáze:", e)
+        print("❌ Chyba pri pripájaní k databáze:")
+        print(e)
         return None
 
+
+
+# Overenie JWT tokenu
 def over_token(request):
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
-
     token = auth_header.split(" ")[1]
     try:
         payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
@@ -45,6 +62,18 @@ def over_token(request):
     except jwt.InvalidTokenError:
         return None
 
+@app.route('/tasks-open', methods=['GET'])
+def get_all_tasks_open():
+    spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
+    cursor = spojenie.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM ulohy")
+    ulohy = cursor.fetchall()
+    cursor.close()
+    spojenie.close()
+    return jsonify(ulohy), 200
+
 @app.route('/tasks', methods=['GET'])
 def get_tasks():
     user_id = over_token(request)
@@ -52,6 +81,8 @@ def get_tasks():
         return jsonify({"error": "Neautorizovaný prístup."}), 401
 
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor(dictionary=True)
     cursor.execute("SELECT * FROM ulohy WHERE user_id = %s", (user_id,))
     ulohy = cursor.fetchall()
@@ -59,10 +90,11 @@ def get_tasks():
     spojenie.close()
     return jsonify(ulohy), 200
 
-
 @app.route('/tasks/<int:id>', methods=['GET'])
 def get_task(id):
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor(dictionary=True)
     cursor.execute("SELECT * FROM ulohy WHERE id = %s", (id,))
     uloha = cursor.fetchone()
@@ -86,20 +118,11 @@ def add_task():
         return jsonify({"error": "Názov a popis sú povinné."}), 400
 
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor()
     sql = "INSERT INTO ulohy (nazov, popis, stav, user_id) VALUES (%s, %s, 'Nezahájená', %s)"
     cursor.execute(sql, (nazov, popis, user_id))
-    spojenie.commit()
-    nove_id = cursor.lastrowid
-    cursor.close()
-    spojenie.close()
-    return jsonify({"message": "Úloha bola pridaná.", "id": nove_id}), 201
-
-
-    spojenie = pripojenie_db()
-    cursor = spojenie.cursor()
-    sql = "INSERT INTO ulohy (nazov, popis, stav) VALUES (%s, %s, 'Nezahájená')"
-    cursor.execute(sql, (nazov, popis))
     spojenie.commit()
     nove_id = cursor.lastrowid
     cursor.close()
@@ -118,6 +141,8 @@ def update_task(id):
         return jsonify({"error": "Neplatný stav."}), 400
 
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor(dictionary=True)
     cursor.execute("SELECT * FROM ulohy WHERE id = %s AND user_id = %s", (id, user_id))
     uloha = cursor.fetchone()
@@ -132,7 +157,6 @@ def update_task(id):
 
     return jsonify({"message": f"Úloha {id} bola aktualizovaná na '{novy_stav}'."}), 200
 
-
 @app.route('/tasks/<int:id>', methods=['DELETE'])
 def delete_task(id):
     user_id = over_token(request)
@@ -140,6 +164,8 @@ def delete_task(id):
         return jsonify({"error": "Neautorizovaný prístup."}), 401
 
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor(dictionary=True)
     cursor.execute("SELECT * FROM ulohy WHERE id = %s AND user_id = %s", (id, user_id))
     uloha = cursor.fetchone()
@@ -154,7 +180,6 @@ def delete_task(id):
 
     return jsonify({"message": f"Úloha {id} bola odstránená."}), 200
 
-
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -167,6 +192,8 @@ def register():
     hash_hesla = generate_password_hash(heslo)
 
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor()
     try:
         cursor.execute("INSERT INTO users (meno, heslo) VALUES (%s, %s)", (meno, hash_hesla))
@@ -178,7 +205,6 @@ def register():
         cursor.close()
         spojenie.close()
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -189,6 +215,8 @@ def login():
         return jsonify({"error": "Meno a heslo sú povinné."}), 400
 
     spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
     cursor = spojenie.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users WHERE meno = %s", (meno,))
     user = cursor.fetchone()
@@ -198,15 +226,10 @@ def login():
     if not user or not check_password_hash(user["heslo"], heslo):
         return jsonify({"error": "Nesprávne meno alebo heslo."}), 401
 
-    token = jwt.encode(
-    {
+    token = jwt.encode({
         "user_id": user["id"],
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-    },
-    app.config['SECRET_KEY'],
-    algorithm="HS256"
-)
-
+    }, app.config['SECRET_KEY'], algorithm="HS256")
 
     return jsonify({"token": token}), 200
 
