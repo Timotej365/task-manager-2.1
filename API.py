@@ -7,11 +7,12 @@ import jwt
 import datetime
 from dotenv import load_dotenv
 import os
+import tempfile
 
 load_dotenv()
-
 app = Flask(__name__)
 
+# Povolené frontend domény
 CORS(app, resources={r"/*": {"origins": [
     "http://localhost:3000",
     "https://task-manager-2-1.vercel.app"
@@ -31,19 +32,23 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 def pripojenie_db():
     try:
+        ca_content = os.environ.get("CA_PEM")
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".pem") as temp_cert:
+            temp_cert.write(ca_content)
+            temp_cert_path = temp_cert.name
+
         spojenie = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             port=int(os.getenv("DB_PORT")),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            ssl_disabled=True  # 🔧 Dočasne zakázané SSL pre Render
+            ssl_ca=temp_cert_path,
+            ssl_verify_cert=True
         )
-        print("✅ Pripojenie k databáze úspešné.")
         return spojenie
     except Error as e:
-        print("❌ Chyba pri pripájaní k databáze:")
-        print(e)
+        print("❌ Chyba pri pripájaní k databáze:", e)
         return None
 
 def over_token(request):
@@ -58,6 +63,54 @@ def over_token(request):
         return None
     except jwt.InvalidTokenError:
         return None
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    meno = data.get("meno")
+    heslo = data.get("heslo")
+    if not meno or not heslo:
+        return jsonify({"error": "Meno a heslo sú povinné."}), 400
+    hash_hesla = generate_password_hash(heslo)
+    spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
+    cursor = spojenie.cursor()
+    try:
+        cursor.execute("INSERT INTO users (meno, heslo) VALUES (%s, %s)", (meno, hash_hesla))
+        spojenie.commit()
+        return jsonify({"message": "Registrácia prebehla úspešne."}), 201
+    except mysql.connector.IntegrityError:
+        return jsonify({"error": "Používateľ s týmto menom už existuje."}), 409
+    except Exception as e:
+        print(f"❌ Neočakávaná chyba: {e}")
+        return jsonify({"error": "Chyba na serveri."}), 500
+    finally:
+        cursor.close()
+        spojenie.close()
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    meno = data.get("meno")
+    heslo = data.get("heslo")
+    if not meno or not heslo:
+        return jsonify({"error": "Meno a heslo sú povinné."}), 400
+    spojenie = pripojenie_db()
+    if spojenie is None:
+        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
+    cursor = spojenie.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE meno = %s", (meno,))
+    user = cursor.fetchone()
+    cursor.close()
+    spojenie.close()
+    if not user or not check_password_hash(user["heslo"], heslo):
+        return jsonify({"error": "Nesprávne meno alebo heslo."}), 401
+    token = jwt.encode({
+        "user_id": user["id"],
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    }, app.config['SECRET_KEY'], algorithm="HS256")
+    return jsonify({"token": token}), 200
 
 @app.route('/tasks-open', methods=['GET'])
 def get_all_tasks_open():
@@ -85,21 +138,6 @@ def get_tasks():
     cursor.close()
     spojenie.close()
     return jsonify(ulohy), 200
-
-@app.route('/tasks/<int:id>', methods=['GET'])
-def get_task(id):
-    spojenie = pripojenie_db()
-    if spojenie is None:
-        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
-    cursor = spojenie.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM ulohy WHERE id = %s", (id,))
-    uloha = cursor.fetchone()
-    cursor.close()
-    spojenie.close()
-    if uloha:
-        return jsonify(uloha), 200
-    else:
-        return jsonify({"error": "Úloha neexistuje."}), 404
 
 @app.route('/tasks', methods=['POST'])
 def add_task():
@@ -165,59 +203,6 @@ def delete_task(id):
     spojenie.close()
     return jsonify({"message": f"Úloha {id} bola odstránená."}), 200
 
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    meno = data.get("meno")
-    heslo = data.get("heslo")
-    if not meno or not heslo:
-        return jsonify({"error": "Meno a heslo sú povinné."}), 400
-    hash_hesla = generate_password_hash(heslo)
-    spojenie = pripojenie_db()
-    if spojenie is None:
-        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
-    cursor = spojenie.cursor()
-    try:
-        cursor.execute("INSERT INTO users (meno, heslo) VALUES (%s, %s)", (meno, hash_hesla))
-        spojenie.commit()
-        return jsonify({"message": "Registrácia prebehla úspešne."}), 201
-    except mysql.connector.IntegrityError:
-        return jsonify({"error": "Používateľ s týmto menom už existuje."}), 409
-    except Exception as e:
-        print(f"❌ Neočakávaná chyba: {e}")
-        return jsonify({"error": "Chyba na serveri."}), 500
-    finally:
-        cursor.close()
-        spojenie.close()
-
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    meno = data.get("meno")
-    heslo = data.get("heslo")
-    if not meno or not heslo:
-        return jsonify({"error": "Meno a heslo sú povinné."}), 400
-    spojenie = pripojenie_db()
-    if spojenie is None:
-        return jsonify({"error": "Chyba pri pripájaní k databáze."}), 500
-    cursor = spojenie.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM users WHERE meno = %s", (meno,))
-    user = cursor.fetchone()
-    cursor.close()
-    spojenie.close()
-    if not user or not check_password_hash(user["heslo"], heslo):
-        return jsonify({"error": "Nesprávne meno alebo heslo."}), 401
-    token = jwt.encode({
-        "user_id": user["id"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-    }, app.config['SECRET_KEY'], algorithm="HS256")
-    return jsonify({"token": token}), 200
-
 if __name__ == '__main__':
-    spojenie = pripojenie_db()
-    if spojenie:
-        print("✅ DB spojenie OK")
-    else:
-        print("❌ DB spojenie nefunguje")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
