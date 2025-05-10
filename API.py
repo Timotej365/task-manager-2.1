@@ -37,13 +37,14 @@ def pripojenie_db():
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            ssl_ca="/etc/secrets/ca.pem",
+            ssl_ca="./ca.pem",
             ssl_verify_cert=True
         )
         print("✅ Pripojenie k databáze úspešné.")
         return spojenie
     except Error as e:
-        print("❌ Chyba pri pripájaní k databáze:", e)
+        print("❌ Chyba pri pripájaní k databáze:")
+        print(e)
         return None
 
 def over_token(request):
@@ -183,6 +184,9 @@ def register():
         return jsonify({"message": "Registrácia prebehla úspešne."}), 201
     except mysql.connector.IntegrityError:
         return jsonify({"error": "Používateľ s týmto menom už existuje."}), 409
+    except Exception as e:
+        print(f"❌ Neočakávaná chyba: {e}")
+        return jsonify({"error": "Chyba na serveri."}), 500
     finally:
         cursor.close()
         spojenie.close()
@@ -211,5 +215,10 @@ def login():
     return jsonify({"token": token}), 200
 
 if __name__ == '__main__':
+    spojenie = pripojenie_db()
+    if spojenie:
+        print("✅ DB spojenie OK")
+    else:
+        print("❌ DB spojenie nefunguje")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
