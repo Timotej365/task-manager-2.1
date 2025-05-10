@@ -10,11 +10,6 @@ import os
 
 load_dotenv()
 
-print("🔍 DB HOST:", os.getenv("DB_HOST"))
-print("🔍 DB USER:", os.getenv("DB_USER"))
-print("🔍 DB PASSWORD:", os.getenv("DB_PASSWORD"))
-
-
 app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": [
@@ -34,19 +29,16 @@ def pridaj_cors_headers(response):
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
-# Konfigurácia pre databázu (bezpečné pripojenie s ca.pem)
-db_config = {
-    "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT")),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME"),
-    "ssl_ca": os.path.join(os.path.dirname(__file__), "ca.pem")
-}
-
 def pripojenie_db():
     try:
-        spojenie = mysql.connector.connect(**db_config)
+        spojenie = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            port=int(os.getenv("DB_PORT")),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            ssl_disabled=True  # 🔧 Dočasne zakázané SSL pre Render
+        )
         print("✅ Pripojenie k databáze úspešné.")
         return spojenie
     except Error as e:
