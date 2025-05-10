@@ -43,10 +43,8 @@ def pripojenie_db():
         print("✅ Pripojenie k databáze úspešné.")
         return spojenie
     except Error as e:
-        print("❌ Chyba pri pripájaní k databáze:")
-        print(e)
+        print("❌ Chyba pri pripájaní k databáze:", e)
         return None
-
 
 def over_token(request):
     auth_header = request.headers.get('Authorization')
