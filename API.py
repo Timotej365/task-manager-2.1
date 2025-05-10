@@ -12,19 +12,19 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Dynamické CORS podľa origin
-CORS(app, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": [
+    "http://localhost:3000",
+    "https://task-manager-2-1.vercel.app"
+]}}, supports_credentials=True)
 
 @app.after_request
 def pridaj_cors_headers(response):
     origin = request.headers.get("Origin")
-    allowed = ["http://localhost:3000", "https://task-manager-2-1.vercel.app"]
-    if origin in allowed:
+    if origin in ["http://localhost:3000", "https://task-manager-2-1.vercel.app"]:
         response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
     response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
-    response.headers["Vary"] = "Origin"
     return response
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -37,7 +37,7 @@ def pripojenie_db():
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            ssl_ca=os.path.join(os.path.dirname(__file__), "ca.pem"),
+            ssl_ca="/etc/secrets/ca.pem",  # ✅ kľúčová zmena pre Render
             ssl_verify_cert=True
         )
         print("✅ Pripojenie k databáze úspešné.")
