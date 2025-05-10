@@ -37,7 +37,7 @@ def pripojenie_db():
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            ssl_ca="/etc/secrets/ca.pem",  # ✅ kľúčová zmena pre Render
+            ssl_ca="/etc/secrets/ca.pem",
             ssl_verify_cert=True
         )
         print("✅ Pripojenie k databáze úspešné.")
@@ -46,6 +46,7 @@ def pripojenie_db():
         print("❌ Chyba pri pripájaní k databáze:")
         print(e)
         return None
+
 
 def over_token(request):
     auth_header = request.headers.get('Authorization')
