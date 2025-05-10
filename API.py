@@ -32,24 +32,19 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 def pripojenie_db():
     try:
-        ca_content = os.environ.get("CA_PEM")
-        with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".pem") as temp_cert:
-            temp_cert.write(ca_content)
-            temp_cert_path = temp_cert.name
-
         spojenie = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
-            port=int(os.getenv("DB_PORT")),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            ssl_ca=temp_cert_path,
-            ssl_verify_cert=True
+            port=int(os.getenv("DB_PORT")),
+            ssl_ca="/etc/secrets/ca.pem"  # ← použijeme presnú cestu podľa Render dokumentácie
         )
         return spojenie
-    except Error as e:
-        print("❌ Chyba pri pripájaní k databáze:", e)
+    except mysql.connector.Error as err:
+        print(f"Chyba pri pripájaní k databáze: {err}")
         return None
+
 
 def over_token(request):
     auth_header = request.headers.get('Authorization')
