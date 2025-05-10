@@ -29,17 +29,19 @@ def pridaj_cors_headers(response):
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
+# Konfigurácia pre databázu (bezpečné pripojenie s ca.pem)
+db_config = {
+    "host": os.getenv("DB_HOST"),
+    "port": int(os.getenv("DB_PORT")),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME"),
+    "ssl_ca": os.path.join(os.path.dirname(__file__), "ca.pem")
+}
+
 def pripojenie_db():
     try:
-        spojenie = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            port=int(os.getenv("DB_PORT")),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME"),
-            ssl_ca="./ca.pem",
-            ssl_verify_cert=True
-        )
+        spojenie = mysql.connector.connect(**db_config)
         print("✅ Pripojenie k databáze úspešné.")
         return spojenie
     except Error as e:
