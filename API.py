@@ -10,6 +10,11 @@ import os
 
 load_dotenv()
 
+print("🔍 DB HOST:", os.getenv("DB_HOST"))
+print("🔍 DB USER:", os.getenv("DB_USER"))
+print("🔍 DB PASSWORD:", os.getenv("DB_PASSWORD"))
+
+
 app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": [
