@@ -11,15 +11,17 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)  # Jednoduchšie a kompatibilnejšie
+
+# Povolenie CORS pre lokálny aj nasadený frontend
+CORS(app, resources={r"/*": {"origins": [
+    "http://localhost:3000",
+    "https://task-manager-2-1.vercel.app"
+]}}, supports_credentials=True)
 
 @app.after_request
 def pridaj_cors_headers(response):
     origin = request.headers.get("Origin")
-    if origin in [
-        "http://localhost:3000",
-        "https://task-manager-2-1.vercel.app"
-    ]:
+    if origin in ["http://localhost:3000", "https://task-manager-2-1.vercel.app"]:
         response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Vary"] = "Origin"
     response.headers["Access-Control-Allow-Credentials"] = "true"
@@ -232,5 +234,6 @@ def login():
     return jsonify({"token": token}), 200
 
 if __name__ == '__main__':
+    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
