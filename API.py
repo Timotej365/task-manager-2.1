@@ -12,22 +12,24 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Povolenie CORS pre frontend
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+# Povolenie CORS pre localhost aj produkčný frontend
+CORS(app, resources={r"/*": {"origins": [
+    "http://localhost:3000",
+    "https://task-manager-2-1.vercel.app"
+]}}, supports_credentials=True)
 
-# Pridanie hlavičiek po každom requeste
 @app.after_request
 def pridaj_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    origin = request.headers.get("Origin")
+    if origin in ["http://localhost:3000", "https://task-manager-2-1.vercel.app"]:
+        response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
     response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
     return response
 
-# Načítanie tajného kľúča
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
-# Pripojenie k Aiven DB cez SSL
 def pripojenie_db():
     try:
         spojenie = mysql.connector.connect(
@@ -46,9 +48,6 @@ def pripojenie_db():
         print(e)
         return None
 
-
-
-# Overenie JWT tokenu
 def over_token(request):
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith("Bearer "):
@@ -237,4 +236,3 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
