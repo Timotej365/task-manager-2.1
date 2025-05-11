@@ -6,6 +6,9 @@ Plne funkčný online správca úloh s registráciou, prihlásením a CRUD oper�
 
 ---
 
+🧪 V repozitári je prítomný testovací skript `test_spojenie.py` a `db_spojenie`, ktorý slúži na overenie funkčnosti pripojenia k databáze počas vývoja.
+
+
 ## 🔧 Použité technológie
 
 - **Frontend:** React.js (Vercel)
