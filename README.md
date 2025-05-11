@@ -2,6 +2,8 @@
 
 Plne funkčný online správca úloh s registráciou, prihlásením a CRUD operáciami. Táto aplikácia je nasadená na **Vercel (frontend)** a **Render (backend)** s cloudovou databázou **MySQL (Aiven)**.
 
+> ℹ️ **Poznámka:** Backend beží na platforme Render v rámci bezplatného plánu. Po cca 15 minútach nečinnosti môže dôjsť k jeho uspatiu, čo môže spôsobiť pomalšie načítanie pri prvom prístupe. Frontend (Vercel) zostáva stále dostupný.
+> 
 > 🔗 [Vyskúšaj aplikáciu online](https://task-manager-2-1.vercel.app)
 
 ---
