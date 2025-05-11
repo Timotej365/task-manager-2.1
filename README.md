@@ -114,8 +114,8 @@ Aplikácia je plne funkčná online a rozdelená na:
 
 #### 🔗 Priame odkazy:
 
-- 🧠 **Frontend:** [task-manager-2-1.vercel.app](https://task-manager-2-1.vercel.app)
-- 🔧 **Backend (API):** [task-manager-2-1.onrender.com](https://task-manager-2-1.onrender.com)
+- 🧠 **Frontend (React):** [task-manager-2-1.vercel.app](https://task-manager-2-1.vercel.app)
+- 🔧 **Backend (Flask API):** REST API dostupné cez React frontend (na Renderi)
 
 Aplikácia je prepojená cez API – registrácia, login, správa úloh, autorizácia cez JWT token.
 
