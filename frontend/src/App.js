@@ -22,10 +22,22 @@ function App() {
       const odpoved = await fetch(`${API_URL}/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!odpoved.ok) {
+        throw new Error("Neautorizovaný prístup – token je neplatný alebo expiroval.");
+      }
+
       const data = await odpoved.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Očakávali sme pole úloh, ale dostali sme niečo iné.");
+      }
+
       setUlohy(data);
     } catch (err) {
       console.error("Chyba pri načítaní úloh:", err);
+      alert("Prihlásenie expirovalo alebo nastala chyba. Prihlás sa znova.");
+      odhlas();
     }
   };
 
