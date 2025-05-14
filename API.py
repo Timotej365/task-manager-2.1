@@ -28,7 +28,6 @@ def pridaj_cors_headers(response):
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
-
 def pripojenie_db():
     try:
         spojenie = mysql.connector.connect(
@@ -37,13 +36,12 @@ def pripojenie_db():
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
             port=int(os.getenv("DB_PORT")),
-            ssl_disabled=True  # Upravené: Render nespôsobne správne nacítať secrets cez cestu
+            ssl_ca="ca.pem"  # ✅ Oprava pre bezpečné SSL pripojenie na Aiven
         )
         return spojenie
     except mysql.connector.Error as err:
         print(f"Chyba pri pripájaní k databáze: {err}")
         return None
-
 
 def over_token(request):
     auth_header = request.headers.get('Authorization')
@@ -57,7 +55,6 @@ def over_token(request):
         return None
     except jwt.InvalidTokenError:
         return None
-
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -84,7 +81,6 @@ def register():
         cursor.close()
         spojenie.close()
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -108,7 +104,6 @@ def login():
     }, app.config['SECRET_KEY'], algorithm="HS256")
     return jsonify({"token": token}), 200
 
-
 @app.route('/tasks-open', methods=['GET'])
 def get_all_tasks_open():
     spojenie = pripojenie_db()
@@ -120,7 +115,6 @@ def get_all_tasks_open():
     cursor.close()
     spojenie.close()
     return jsonify(ulohy), 200
-
 
 @app.route('/tasks', methods=['GET'])
 def get_tasks():
@@ -136,7 +130,6 @@ def get_tasks():
     cursor.close()
     spojenie.close()
     return jsonify(ulohy), 200
-
 
 @app.route('/tasks', methods=['POST'])
 def add_task():
@@ -159,7 +152,6 @@ def add_task():
     cursor.close()
     spojenie.close()
     return jsonify({"message": "Úloha bola pridaná.", "id": nove_id}), 201
-
 
 @app.route('/tasks/<int:id>', methods=['PUT'])
 def update_task(id):
@@ -184,7 +176,6 @@ def update_task(id):
     spojenie.close()
     return jsonify({"message": f"Úloha {id} bola aktualizovaná na '{novy_stav}'."}), 200
 
-
 @app.route('/tasks/<int:id>', methods=['DELETE'])
 def delete_task(id):
     user_id = over_token(request)
@@ -203,7 +194,6 @@ def delete_task(id):
     cursor.close()
     spojenie.close()
     return jsonify({"message": f"Úloha {id} bola odstránená."}), 200
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
