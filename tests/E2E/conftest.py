@@ -8,7 +8,7 @@ def playwright_instance():
 
 @pytest.fixture(scope="function")
 def page(playwright_instance) -> Page:
-    browser = playwright_instance.chromium.launch(headless=False, slow_mo=200)
+    browser = playwright_instance.chromium.launch(headless=True, slow_mo=200)
     context = browser.new_context()
     page = context.new_page()
     try:
