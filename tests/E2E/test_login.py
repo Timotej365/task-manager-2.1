@@ -14,7 +14,7 @@ def test_login_success(page, username, password):
 # NEGATÍVNE TESTY
 @pytest.mark.parametrize("username, password, expected_error", [
     ("", "", "Zadaj meno aj heslo."),
-    ("student", "zleheslo", "Prihlásenie zlyhalo.")
+    ("student", "zleheslo", "Nesprávne meno alebo heslo.")
 ])
 def test_login_failures(page, username, password, expected_error):
     login = LoginPage(page)
