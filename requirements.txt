@@ -4,3 +4,6 @@ mysql-connector-python
 flask-cors
 PyJWT
 gunicorn
+playwright
+pytest-playwright
+pytest

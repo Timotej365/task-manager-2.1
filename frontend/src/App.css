@@ -2,11 +2,13 @@ body {
   font-family: Arial, sans-serif;
   padding: 20px;
   background-color: #fdfdfd;
+  margin: 0;
 }
 
 h1 {
   color: #222;
   margin-bottom: 20px;
+  font-size: 1.8em;
 }
 
 h2 {
@@ -18,8 +20,22 @@ h2 {
 }
 
 input, button {
-  padding: 6px 10px;
-  margin: 5px 5px 10px 0;
+  padding: 8px 12px;
+  margin: 5px 0 15px 0;
+  font-size: 14px;
+}
+
+input {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
   font-size: 14px;
 }
 
@@ -28,12 +44,13 @@ button {
   border: none;
   color: white;
   cursor: pointer;
-  border-radius: 3px;
-  transition: background-color 0.2s ease;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 button:hover {
   background-color: #0056b3;
+  transform: scale(1.03);
 }
 
 ul {
@@ -75,4 +92,122 @@ p button {
 
 p button:hover {
   text-decoration: underline;
+}
+
+/* 🔴 Chybová hláška s animáciou */
+.error {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+/* 🟢 Úspešná hláška */
+.success {
+  color: green;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* 🟢 Fade-in efekt pre prepínanie formulára */
+.fade-in {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 📱 Responzívne */
+@media screen and (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.4em;
+  }
+
+  h2 {
+    font-size: 1.2em;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  input {
+    font-size: 16px;
+  }
+}
+
+/* MODÁLNE OKNO NA POTVRDENIE */
+
+/* Zakrytie celej obrazovky */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Obsah modálneho okna */
+.modal-content {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  max-width: 350px;
+  width: 90%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+/* Tlačidlá v modálnom okne */
+.modal-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.modal-buttons button {
+  padding: 8px 18px;
+  border-radius: 4px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-confirm {
+  background-color: #d9534f; /* červená */
+  color: white;
+}
+
+.btn-confirm:hover {
+  background-color: #c9302c;
+}
+
+.btn-cancel {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0;
 }
