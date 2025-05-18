@@ -80,7 +80,27 @@ npm start
 
 ## 🧪 Príklady testovania
 
-Registroval som testovacieho používateľa. Funguje:
+# Playwright E2E testy
+
+Tento projekt obsahuje end-to-end testy napísané pomocou Playwright v Pythone. Testy overujú základné funkcie frontendu, ako je prihlasovanie, registrácia, pridávanie a úprava úloh.
+
+## Ako spustiť testy lokálne
+
+```bash
+# 1. Aktivuj virtuálne prostredie (venv):
+source venv/bin/activate       # pre Linux / MacOS
+.\venv\Scripts\Activate.ps1    # pre Windows PowerShell
+```
+# 2. Nainštaluj závislosti a Playwright:
+```bash
+pip install -r requirements.txt
+playwright install
+```
+# 3. Spusti testy:
+```bash
+pytest tests/E2E -v
+```
+Registroval som testovacieho používateľa. Manuálnym testovaním som overil, že Funguje:
 
 - registrácia  
 - následné prihlásenie  
@@ -99,14 +119,6 @@ Tento projekt bol vytvorený ako portfólio ukážka pre pozíciu **junior teste
 - precvičiť si **frontend/backend prepojenie cez API**
 - naučiť sa prácu s **databázou**
 - pochopiť základy **CI/CD** a **nasadenia do cloudu**
-
----
-
-## 📂 Screenshoty priebehu
-
-Nájdeš v priečinku [`/screenshots`](./screenshots) – obsahuje priebeh spustenia a testovania aplikácie.
-
----
 
 ---
 
