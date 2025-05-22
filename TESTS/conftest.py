@@ -1,6 +1,7 @@
 import pytest
 from playwright.sync_api import sync_playwright
-from server_ready import cakat_na_server
+from .server_ready import cakat_na_server
+
 
 BASE_URL = "https://task-manager-2-1.vercel.app"  # frontend URL
 
