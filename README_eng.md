@@ -55,12 +55,12 @@ SECRET_KEY=...
 
 #### 📁 `frontend/.env`
 ```
-REACT_APP_API_URL=https://tvoj-render-backend-url.onrender.com
+REACT_APP_API_URL=http://localhost:5000
 ```
 
 ---
 
-### 🚀 Spustenie backendu
+### 🚀 Run Backend
 
 ```bash
 cd backend
@@ -68,7 +68,7 @@ pip install -r requirements.txt
 python API.py
 ```
 
-### 🚀 Spustenie frontendu
+### 🚀 Run Frontend
 
 ```bash
 cd frontend
@@ -78,68 +78,66 @@ npm start
 
 
 
-## 🧪 Príklady testovania
+## 🧪Testing Examples
 
-# Playwright E2E testy
+# Playwright E2E Tests
 
-Tento projekt obsahuje end-to-end testy napísané pomocou Playwright v Pythone. Testy overujú základné funkcie frontendu, ako je prihlasovanie, registrácia, pridávanie a úprava úloh.
+This project includes end-to-end tests written with Playwright in Python. Tests verify key frontend functionality like login, registration, task creation, and task editing.
 
-## Ako spustiť testy lokálne
+# How to run tests locally
 
+
+## 1. Activate virtual environment (venv):
 ```bash
-# 1. Aktivuj virtuálne prostredie (venv):
-source venv/bin/activate       # pre Linux / MacOS
-.\venv\Scripts\Activate.ps1    # pre Windows PowerShell
+source venv/bin/activate       # for Linux / MacOS
+.\venv\Scripts\Activate.ps1    # for Windows PowerShell
 ```
-# 2. Nainštaluj závislosti a Playwright:
+## 2. Install dependencies and Playwright:
 ```bash
 pip install -r requirements.txt
 playwright install
 ```
-# 3. Spusti testy:
+## 3. Run tests:
 ```bash
 pytest tests/E2E -v
 ```
-Registroval som testovacieho používateľa. Manuálnym testovaním som overil, že Funguje:
-
-- registrácia  
-- následné prihlásenie  
-- pridanie úlohy  
-- zmena stavu úlohy  
-- odstránenie úlohy  
-
-JWT token sa ukladá do `localStorage`, požiadavky sa autorizujú.
+I have registered a test user. Manual testing has verified that the following features work:
+-registration
+-subsequent login
+-adding a task
+-updating task status
+-deleting a task
+-The JWT token is stored in localStorage, and requests are authorized.
 
 ---
 
-## 🎯 Ciele projektu
+## 🎯 Project Goals
 
-Tento projekt bol vytvorený ako portfólio ukážka pre pozíciu **junior testera** alebo **QA automation**, pričom cieľom bolo:
+This project was created as a portfolio showcase for a junior tester or QA automation position, with the goals of:
 
-- precvičiť si **frontend/backend prepojenie cez API**
-- naučiť sa prácu s **databázou**
-- pochopiť základy **CI/CD** a **nasadenia do cloudu**
+-Practicing frontend/backend API integration
+-Learning to work with a database
+-Understanding the basics of CI/CD and cloud deployment
 
 ---
 
-### 🌐 Verejné nasadenie
+### 🌐 Public Deployment
 
-Aplikácia je plne funkčná online a rozdelená na:
+The application is fully functional online and split into:
 
-- 🔙 **Backend (Flask API):** hostovaný na [Render](https://render.com)
-- 🖥️ **Frontend (React):** hostovaný na [Vercel](https://vercel.com)
+- 🔙 **Backend (Flask API):** hosted on [Render](https://render.com)
+- 🖥️ **Frontend (React):** hosted on [Vercel](https://vercel.com)
 
-#### 🔗 Priame odkazy:
+#### 🔗 Direct Links:
 
 - 🧠 **Frontend (React):** [task-manager-2-1.vercel.app](https://task-manager-2-1.vercel.app)
-- 🔧 **Backend (Flask API):** REST API dostupné cez React frontend (na Renderi)
+- 🔧 **Backend (Flask API):** REST API accessible via the React frontend (on Render)
 
-Aplikácia je prepojená cez API – registrácia, login, správa úloh, autorizácia cez JWT token.
+The application is connected via API – registration, login, task management, JWT token authorization.
 
-> Prezentovateľná verzia projektu určená pre GitHub portfólio a HR.
+A presentable version of the project intended for GitHub portfolio and HR.
 
-
-## 👤 Kontakt
+## 👤 Contact
 
 **Timotej Šebest**  
 GitHub: [@Timotej365](https://github.com/Timotej365)  
